@@ -33,6 +33,11 @@ conflicts = {
     ("", "") : 5
 }
 
+# Encourage algorithm to return resuts with the following pairs working together
+preferred_pairs = {
+    ("Marina", "Jackson"): 1   # higher value = more encouraged
+}
+
 # Start a problem definition
 lp = LpProblem("wall_scheduling", LpMaximize)
 
@@ -106,9 +111,34 @@ for (e1, e2), weight in conflicts.items():
 
             penalties.append((p, weight))
 
-# lp += lpSum(variable.values()), "Maximize_assigned_shifts"
-lp += lpSum(variable.values()) - lpSum(weight * p for p, weight in penalties)
+# 5) Encourage algorithms to pair these pairs
+bonuses = []
 
+for (e1, e2), weight in preferred_pairs.items():
+    for (employee, day, start, end) in variable:
+        if employee == e1 and (e2, day, start, end) in variable:
+            b = LpVariable(
+                f"bonus_{e1}_{e2}_{day}_{start.strftime('%H%M')}",
+                lowBound=0,
+                upBound=1,
+                cat="Binary"
+            )
+
+            # Bonus active only if both are assigned
+            lp += (
+                b <= variable[(e1, day, start, end)]
+            )
+            lp += (
+                b <= variable[(e2, day, start, end)]
+            )
+
+            bonuses.append((b, weight))
+
+lp += (
+    lpSum(variable.values())
+    + lpSum(weight * b for b, weight in bonuses)
+    - lpSum(weight * p for p, weight in penalties)  # if you also have penalties
+)
 lp.solve(PULP_CBC_CMD(msg=False))
 
 print(f"Status: {LpStatus[lp.status]}\n")
