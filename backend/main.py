@@ -149,6 +149,7 @@ for key, var in variable.items():
     if var.varValue==1:
         final_schedule_set.append(var.name)
         
+        
 def who_is_working(shift):
     employees = []
     for instance in final_schedule_set:
