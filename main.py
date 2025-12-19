@@ -1,213 +1,149 @@
-# Necessary Dependencies
 from pulp import *
 from datetime import time
 from itertools import combinations
 
-# Open Hours represented in the form of a dictionary with days as keys and a list as values. 
-# The list represents open times in tuples based on shifts
-
+# Define open hours and employee availability
 openhours = {
-    "Monday": [
-        (time(12), time(15), 2)
-    ],
-    "Tuesday": [
-        (time(12), time(15), 1)
-    ]
+    #Day: start, open, employees needed
+    "Monday": [(time(12), time(15), 3)],
+    "Tuesday": [(time(12), time(15), 1)]
 }
 
-# --- Sample Employee Availability ---
-employee_availablity = {
-    "Alice": {
-        "Monday": [(time(12), time(15))],
+employee_availability = {
+    "Jack": {
+        # Day: start, end
+        "Monday": [(time(12), time(15))]
     },
-    "John": {
+    "Jackson": {
         "Monday": [(time(12), time(15))],
         "Tuesday": [(time(12), time(15))]
+    }, 
+    "Jake": {
+        "Monday": [(time(12), time(15))],
+        "Tuesday": [(time(12), time(15))]
+    },
+    "Marina": {
+        "Monday": [(time(12), time(15))]
     }
 }
 
-# openhours = {
-#     "Sunday": [
-#         # start time, open time, number of employees required
-#         (time(12), time(14), 2),
-#         (time(14), time(16), 2),
-#         (time(16), time(18), 3),
-#         (time(18), time(20), 3),
-#         (time(20), time(22), 2)
-#     ],
-#     "Monday": [
-#         (time(14), time(16), 2),
-#         (time(16), time(18), 3),
-#         (time(18), time(20), 3),
-#         (time(20), time(22), 2)
-#     ],
-#     "Tueday": [
-#         (time(16), time(18), 3),
-#         (time(18), time(20), 2),
-#         (time(20), time(22), 2)
-#     ],
-#     "Wednesday": [
-#         (time(12), time(14), 2),
-#         (time(14), time(16), 2),
-#         (time(16), time(18), 3),
-#         (time(18), time(20), 2)
-#     ],
-#     "Thursday": [
-#         (time(12), time(14), 2),
-#         (time(14), time(16), 2),
-#         (time(16), time(18), 3),
-#         (time(18), time(20), 3)
-#     ],
-#     "Friday": [
-#         (time(12), time(14), 2),
-#         (time(14), time(16), 2),
-#         (time(16), time(18), 3),
-#         (time(18), time(20), 3),
-#         (time(20), time(22), 3)
-#     ],
-#     "Saturday": []
-# }
+# Discourage algorithm to return results with the following pairs working together
+conflicts = {
+    ("Marina", "Jackson"): 5,   # higher value = more discouraged
+    ("", "") : 5
+}
 
-# # This is the list of the available hours of each employee
-# # Represented in a dictionary 
-# employee_availablity = {
-#     "John": {
-#         "Sunday": [(time(12), time(16)), (time(18), time(20))],
-#         "Monday": [(time(12), time(14)), (time(18), time(20))],
-#         "Tuesday": [(time(12), time(16)), (time(18), time(20))],
-#         "Wednesday": [(time(12), time(16))]
-#     },
-#     "Jack": {
-#         "Thursday": [(time(12), time(16)), (time(18), time(20))],
-#         "Wednesday": [(time(12), time(14)), (time(18), time(20))],
-#         "Friday": [(time(12), time(16)), (time(18), time(20))],
-#         "Saturday": [(time(12), time(16))]
-#     },
-#     "Krish": {
-#         "Sunday": [(time(12), time(22))],
-#         "Monday": [(time(14), time(18))],
-#         "Tuesday": [(time(12), time(16)), (time(18), time(20))],
-#         "Wednesday": [(time(12), time(16))]
-#     },
-#     "Julia": {
-#         "Monday": [(time(12), time(14)), (time(14), time(16)), (time(16), time(18)), (time(18), time(20))],
-#         "Tuesday": [(time(12), time(22))],
-#         "Friday": [(time(16), time(18)), (time(20), time(22))],
-#         "Wednesday": [(time(12), time(16))]
-#     },
-#     "tues": {
-#         "Tuesday": [(time(12), time(14)), (time(14), time(16)), (time(16), time(18)), (time(18), time(20))]
-#     }
-# }
-
+# Start a problem definition
 lp = LpProblem("wall_scheduling", LpMaximize)
-variables = {}
 
-# Add variables here
-for day in openhours:
-    if day:
-        for shifts in openhours[day]:
-            start = shifts[0].strftime('%H%M')
-            end = shifts[1].strftime('%H%M')
-            employees_needed = shifts[2]
-
-            variables[(f"{day}_{start}_{end}_sink")] = LpVariable(
-                f"{day}_{start}_{end}_sink", lowBound=int(employees_needed), upBound=int(employees_needed)
-            )
-
-for employee in employee_availablity:
-    if employee:
-        for days in employee_availablity[employee]:
-            shifts = employee_availablity[employee][days]
-            for shift in shifts:
-                start = shift[0].strftime('%H%M')
-                end = shift[1].strftime('%H%M')
-                variables[f"source_{employee}_{days}_{start}_{end}"] = LpVariable(
-                    f"source_{employee}_{days}_{start}_{end}", lowBound=1, upBound=3
-                )
+# variable[(employee, day, start, end)] = 1 if employee works that shift
+variable = {}
 
 for day, shifts in openhours.items():
-    for shift in shifts:
-        shift_start, shift_end, employees_needed = shift
-        
-        # Loop over each employee
-        for employee, availability in employee_availablity.items():
-            # Check if employee is available on this day
+    for start, end, _ in shifts:
+        for employee, availability in employee_availability.items():
             if day in availability:
-                for avail in availability[day]:
-                    avail_start, avail_end = avail
-                    # Check if the shift is fully within employee availability
-                    if avail_start <= shift_start and avail_end >= shift_end:
-                        # Variable name: "employee_day_start_end"
-                        var_name = f"{employee}_{day}_{shift_start.strftime('%H%M')}_{shift_end.strftime('%H%M')}"
-                        variables[var_name] = LpVariable(var_name, lowBound=0, upBound=1)
+                for a_start, a_end in availability[day]:
+                    if a_start <= start and a_end >= end:
+                        variable[(employee, day, start, end)] = LpVariable(
+                            f"{employee}_{day}_{start.strftime('%H%M')}_{end.strftime('%H%M')}",
+                            cat="Binary"
+                        )
 
-print("all vars created")
+# 1) Enough employees on staff
+for day, shifts in openhours.items():
+    for start, end, required in shifts:
+        lp += (
+            lpSum(
+                variable[(e, day, start, end)]
+                for e in employee_availability
+                if (e, day, start, end) in variable
+            )
+            == required,
+            f"coverage_{day}_{start.strftime('%H%M')}_{end.strftime('%H%M')}"
+        )
 
-# Add constraints here
-
-# Collect shift assignment variables by (day, start, end)
-shift_assignments = {}
-employee_assignments = {}
-
-for name, var in variables.items():
-    parts = name.split("_")
-    if len(parts) == 4 and parts[0] not in ["source"] and not name.endswith("_sink"):
-        employee, day, start, end = parts
-        shift_assignments.setdefault((day, start, end), []).append(var)
-        employee_assignments.setdefault(employee, []).append((day, start, end, var))
-
-
-for (day, start, end), vars_for_shift in shift_assignments.items():
-    sink_var = variables[f"{day}_{start}_{end}_sink"]
-    lp += lpSum(vars_for_shift) == sink_var, f"coverage_{day}_{start}_{end}"
-
-
-for employee, shifts in employee_assignments.items():
-    lp += lpSum(var for _, _, _, var in shifts) >= 1, f"min_shifts_{employee}"
-    lp += lpSum(var for _, _, _, var in shifts) <= 3, f"max_shifts_{employee}"
-
-
-for employee in employee_assignments:
-    source_vars = [
-        var for name, var in variables.items()
-        if name.startswith(f"source_{employee}_")
+# 2) Employee min 1 shift and max 3 shifts
+for employee in employee_availability:
+    employee_shifts = [
+        var for (e, _, _, _), var in variable.items() if e == employee
     ]
-    assigned_vars = [
-        var for _, _, _, var in employee_assignments[employee]
+
+    if employee_shifts:  # only constrain if they can work
+        lp += lpSum(employee_shifts) >= 1, f"min_shifts_{employee}"
+        lp += lpSum(employee_shifts) <= 3, f"max_shifts_{employee}"
+
+# 3) No consecutive shifts for an employee
+for employee in employee_availability:
+    shifts = [
+        (day, start, end, variable[(employee, day, start, end)])
+        for (e, day, start, end) in variable
+        if e == employee
     ]
-    lp += lpSum(assigned_vars) == lpSum(source_vars), f"flow_{employee}"
+
+    for (d1, s1, e1, v1), (d2, s2, e2, v2) in combinations(shifts, 2):
+        if d1 == d2 and (e1 == s2 or e2 == s1):
+            lp += v1 + v2 <= 1, f"no_consecutive_{employee}_{d1}"
 
 
-for employee, shifts in employee_assignments.items():
-    for (day1, s1, e1, var1), (day2, s2, e2, var2) in combinations(shifts, 2):
-        if day1 == day2:
-            # consecutive forward
-            if e1 == s2 or e2 == s1:
-                lp += var1 + var2 <= 1, f"no_consecutive_{employee}_{day1}_{s1}_{s2}"
+# 4) Penalize staff who shouldn't be places together
+penalties = []
 
+for (e1, e2), weight in conflicts.items():
+    for (employee, day, start, end) in variable:
+        if employee == e1 and (e2, day, start, end) in variable:
+            p = LpVariable(
+                f"penalty_{e1}_{e2}_{day}_{start.strftime('%H%M')}",
+                lowBound=0,
+                upBound=1,
+                cat="Binary"
+            )
 
+            # Activate penalty if both are scheduled
+            lp += (
+                p >= variable[(e1, day, start, end)] + variable[(e2, day, start, end)] - 1
+            )
 
-# Objective of maximum flow problem
-lp += lpSum(
-    var for name, var in variables.items()
-    if len(name.split("_")) == 4 and not name.endswith("_sink")
-)
-# Solve 
-lp.solve()
+            penalties.append((p, weight))
 
-for name, var in variables.items():
-    print(f"{name} = {var.varValue}")
+# lp += lpSum(variable.values()), "Maximize_assigned_shifts"
+lp += lpSum(variable.values()) - lpSum(weight * p for p, weight in penalties)
 
-# Helper Functions
-def employee_can_work(employee, open_shift):
-    # returns if given employee can work given shift
-    return None
+lp.solve(PULP_CBC_CMD(msg=False))
 
-def who_is_working(open_shift):
-    # return all employees working on the given shift
-    return None
+print(f"Status: {LpStatus[lp.status]}\n")
+
+final_schedule_set = []
+
+for key, var in variable.items():
+    if var.varValue==1:
+        final_schedule_set.append(var.name)
+        
+def who_is_working(shift):
+    employees = []
+    for instance in final_schedule_set:
+        if shift in instance:
+            employees.append(instance.split("_")[0])
+
+    return employees
+
 
 def when_are_they_working(employee):
-    # return all shifts where given employee is working
-    return None
+    shifts = []
+    for instance in final_schedule_set:
+        if instance.split("_")[0] == employee:
+            shifts.append(instance.split("_")[1:4])
+
+    return shifts
+
+
+def total_hours():
+    return len(final_schedule_set)
+
+
+for instance in final_schedule_set:
+    print("final: ", instance)
+
+print("when is person x working ", when_are_they_working("Jack"))
+print("who is working on monday 12 - 15 ",who_is_working("Monday_1200_1500"))
+print("total hours: ", total_hours())
