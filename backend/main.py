@@ -1,31 +1,35 @@
 from pulp import *
 from datetime import time
+import datetime
 from itertools import combinations
 
 # Define open hours and employee availability
 openhours = {
     #Day: start, open, employees needed
-    "Monday": [(time(12), time(15), 3)],
-    "Tuesday": [(time(12), time(15), 1)]
+    "Sunday": [(time(12), time(14), 1)],
 }
 
-employee_availability = {
-    "Jack": {
-        # Day: start, end
-        "Monday": [(time(12), time(15))]
-    },
-    "Jackson": {
-        "Monday": [(time(12), time(15))],
-        "Tuesday": [(time(12), time(15))]
-    }, 
-    "Jake": {
-        "Monday": [(time(12), time(15))],
-        "Tuesday": [(time(12), time(15))]
-    },
-    "Marina": {
-        "Monday": [(time(12), time(15))]
-    }
-}
+employee_availability = {'krish': {'Sunday': [(datetime.time(12, 0), datetime.time(14, 0)), (datetime.time(14, 0), datetime.time(16, 0))], 'Tuesday': [(datetime.time(16, 0), datetime.time(18, 0))], 'Wednesday': [(datetime.time(18, 0), datetime.time(20, 0))], 'Friday': [(datetime.time(12, 0), datetime.time(14, 0)), (datetime.time(14, 0), datetime.time(16, 0)), (datetime.time(16, 0), datetime.time(18, 0)), (datetime.time(18, 0), datetime.time(20, 0)), (datetime.time(20, 0), datetime.time(22, 0))], 'Saturday': [(datetime.time(14, 0), datetime.time(16, 0)), (datetime.time(18, 0), datetime.time(20, 0))]}}
+
+# employee_availability = {
+#     "Jack": {
+#         # Day: start, end
+#         "Monday": [(time(12), time(14))]
+#     },
+#     "Jackson": {
+#         "Monday": [(time(12), time(14))],
+#         "Tuesday": [(time(12), time(14))]
+#     }, 
+#     "Jake": {
+#         "Monday": [(time(12), time(14))],
+#         "Tuesday": [(time(12), time(14))]
+#     },
+#     "Marina": {
+#         "Monday": [(time(12), time(14))]
+#     }
+# }
+
+# print(emp)
 
 # Discourage algorithm to return results with the following pairs working together
 conflicts = {

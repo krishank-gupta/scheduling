@@ -1,44 +1,70 @@
 import csv
 from datetime import time
 
-def parse_time(t):
-    hour, minute = map(int, t.strip().split(":"))
-    return time(hour, minute)
+# Columns in the CSV that contain availability
+DAY_COLUMNS = {
+    "Availability: [Sunday]": "Sunday",
+    "Availability: [Monday]": "Monday",
+    "Availability: [Tuesday]": "Tuesday",
+    "Availability: [Wednesday]": "Wednesday",
+    "Availability: [Thursday]": "Thursday",
+    "Availability: [Friday]": "Friday",
+    "Availability: [Saturday]": "Saturday",
+}
 
-def parse_ranges(cell):
-    if not cell or cell.strip().lower() == "none":
+def parse_time_range(time_range: str):
+    """
+    Converts a time range like '12:00 - 2:00' (PM assumed)
+    into (start_time, end_time) as datetime.time objects.
+    """
+
+    def parse_time(t: str) -> time:
+        hour, minute = map(int, t.strip().split(":"))
+
+        # Convert to 24-hour time (PM assumed)
+        if hour != 12:
+            hour += 12
+
+        return time(hour=hour, minute=minute)
+
+    start_str, end_str = time_range.split("-")
+
+    start_time = parse_time(start_str)
+    end_time = parse_time(end_str)
+
+    return start_time, end_time
+
+
+def parse_availability(cell):
+    """
+    Converts '12:00 - 2:00, 4:00 - 6:00'
+    -> [(time(12), time(14)), (time(16), time(18))]
+    """
+    if not cell or not cell.strip():
         return []
 
-    ranges = []
-    for part in cell.split(","):
-        start, end = part.strip().split(" - ")
-        ranges.append((parse_time(start), parse_time(end)))
-    return ranges
-
-def csv_to_availability(csv_path):
-    employee_availability = {}
-
-    with open(csv_path, newline="") as f:
-        reader = csv.DictReader(f)
-
-        # ✅ FIX: strip whitespace before checking brackets
-        day_columns = {}
-        for col in reader.fieldnames:
-            clean = col.strip()
-            if clean.startswith("[") and clean.endswith("]"):
-                day_columns[col] = clean.strip("[]")
-
-        for row in reader:
-            name = row["Name"].strip()
-            employee_availability[name] = {}
-
-            for original_col, day in day_columns.items():
-                ranges = parse_ranges(row[original_col])
-                if ranges:
-                    employee_availability[name][day] = ranges
-
-    return employee_availability
+    ranges = cell.split(",")
+    return [parse_time_range(r.strip()) for r in ranges]
 
 
-availability = csv_to_availability("responses.csv")
-print(availability)
+employee_availability = {}
+
+with open("responses.csv", newline="", encoding="utf-8") as f:
+    reader = csv.DictReader(f)
+
+    for row in reader:
+        name = row["Name"].strip()
+        employee_availability[name] = {}
+
+        for csv_col, day in DAY_COLUMNS.items():
+            availability = parse_availability(row.get(csv_col, ""))
+            if availability:
+                employee_availability[name][day] = availability
+
+
+# Example output
+print(employee_availability)
+# for employee, schedule in employee_availability.items():
+#     print(employee)
+#     for day, slots in schedule.items():
+#         print(f"  {day}: {slots}")
