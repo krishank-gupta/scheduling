@@ -2,13 +2,15 @@
 
 ## Instructions
 
-The first step is to initialize all the variables required.
-
-Open shifts, number of employees needed per shift, employee availability
+The first step is to download the data required from the google sheets. Download it as a csv file. 
 
 ```bash
 pip install foobar
 ```
+
+## Notes
+
+All times are assumed to be in pm format
 
 ## Features
 

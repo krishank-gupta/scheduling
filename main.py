@@ -6,10 +6,95 @@ from datetime import time
 # Define open hours and employee availability
 openhours = {
     #Day: start, open, employees needed
-    "Sunday": [(time(12), time(14), 1)],
+    "Sunday": [
+        (time(12), time(14), 1)
+        (time(14), time(16), 1)
+        (time(16), time(18), 1)
+        (time(18), time(20), 1)
+        (time(20), time(22), 1)
+    ],
+    "Monday": [
+        (time(12), time(14), 1)
+        (time(14), time(16), 1)
+        (time(16), time(18), 1)
+        (time(18), time(20), 1)
+        (time(20), time(22), 1)
+    ],
+    "Tuesday": [
+        (time(12), time(14), 1)
+        (time(14), time(16), 1)
+        (time(16), time(18), 1)
+        (time(18), time(20), 1)
+        (time(20), time(22), 1)
+    ],
+    "Wednesday": [
+        (time(12), time(14), 1)
+        (time(14), time(16), 1)
+        (time(16), time(18), 1)
+        (time(18), time(20), 1)
+        (time(20), time(22), 1)
+    ],
+    "Thursday": [
+        (time(12), time(14), 1)
+        (time(14), time(16), 1)
+        (time(16), time(18), 1)
+        (time(18), time(20), 1)
+        (time(20), time(22), 1)
+    ],
+    "Friday": [
+        (time(12), time(14), 1)
+        (time(14), time(16), 1)
+        (time(16), time(18), 1)
+        (time(18), time(20), 1)
+        (time(20), time(22), 1)
+    ],
+    "Saturday": [
+        (time(12), time(14), 1)
+        (time(14), time(16), 1)
+        (time(16), time(18), 1)
+        (time(18), time(20), 1)
+        (time(20), time(22), 1)
+    ]
+}
+
+# Discourage algorithm to return results with the following pairs working together
+conflicts = {
+    ("Marina", "Lars"): 5   # higher value = more discouraged
+}
+
+# Encourage algorithm to return resuts with the following pairs working together
+preferred_pairs = {
+    ("Kate", "Trey"): 5,  # higher value = more encouraged
+    ("Krish", "Julia"): 5
 }
 
 
+# Employee availability in pulled from csv file
+
+# Change this line if you need to override availability variable.
+# The format is commented below
+employee_availability = {}
+
+# employee_availability = {
+#     "Jack": {
+#         # Day: start, end (time is assumed to be in pm)
+#         "Monday": [(time(12), time(2))]
+#     },
+#     "Jackson": {
+#         "Monday": [(time(12), time(2))],
+#         "Tuesday": [(time(12), time(2))]
+#     }, 
+#     "Jake": {
+#         "Monday": [(time(12), time(2))],
+#         "Tuesday": [(time(12), time(2))]
+#     },
+#     "Marina": {
+#         "Monday": [(time(12), time(2))]
+#     }
+# }
+
+# Convert form response to actual week day
+# If form question for availability changes, change this variable
 DAY_COLUMNS = {
     "Availability: [Sunday]": "Sunday",
     "Availability: [Monday]": "Monday",
@@ -20,10 +105,15 @@ DAY_COLUMNS = {
     "Availability: [Saturday]": "Saturday",
 }
 
+
 def parse_time_range(time_range: str):
     """
-    Converts a time range like '12:00 - 2:00' (PM assumed)
-    into (start_time, end_time) as datetime.time objects.
+    Docstring for parse_time_range
+    
+    :param time_range: takes in a range like 12 - 2 or 2 - 4 
+    :type t: str
+    :return: tuple with starttime and endtime as datetime objects
+    :rtype: tuple
     """
 
     def parse_time(t: str) -> time:
@@ -55,8 +145,7 @@ def parse_availability(cell):
     return [parse_time_range(r.strip()) for r in ranges]
 
 
-employee_availability = {}
-
+# read responses file
 with open("responses.csv", newline="", encoding="utf-8") as f:
     reader = csv.DictReader(f)
 
@@ -70,36 +159,8 @@ with open("responses.csv", newline="", encoding="utf-8") as f:
                 employee_availability[name][day] = availability
 
 
-# employee_availability = {
-#     "Jack": {
-#         # Day: start, end
-#         "Monday": [(time(12), time(14))]
-#     },
-#     "Jackson": {
-#         "Monday": [(time(12), time(14))],
-#         "Tuesday": [(time(12), time(14))]
-#     }, 
-#     "Jake": {
-#         "Monday": [(time(12), time(14))],
-#         "Tuesday": [(time(12), time(14))]
-#     },
-#     "Marina": {
-#         "Monday": [(time(12), time(14))]
-#     }
-# }
-
-# print(emp)
-
-# Discourage algorithm to return results with the following pairs working together
-conflicts = {
-    ("Marina", "Jackson"): 5,   # higher value = more discouraged
-    ("", "") : 5
-}
-
-# Encourage algorithm to return resuts with the following pairs working together
-preferred_pairs = {
-    ("Marina", "Jackson"): 1   # higher value = more encouraged
-}
+# At this point, the employee availability should be fully parsed 
+# And updated into the employee_availability dictionary
 
 # Start a problem definition
 lp = LpProblem("wall_scheduling", LpMaximize)
