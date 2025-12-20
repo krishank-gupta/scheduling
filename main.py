@@ -68,6 +68,15 @@ preferred_pairs = {
     ("Krish", "Julia"): 5
 }
 
+######################################################################################################
+##################################### DO NOT EDIT BELOW THIS LINE ####################################
+##################################### DO NOT EDIT BELOW THIS LINE ####################################
+##################################### DO NOT EDIT BELOW THIS LINE ####################################
+######################################################################################################
+
+# Ensure lower case for conflicts and preferred_pairs
+conflicts = {tuple(map(str.lower, pair)): w for pair, w in conflicts.items()}
+preferred_pairs = {tuple(map(str.lower, pair)): w for pair, w in preferred_pairs.items()}
 
 # Employee availability in pulled from csv file
 
@@ -150,7 +159,7 @@ with open("responses.csv", newline="", encoding="utf-8") as f:
     reader = csv.DictReader(f)
 
     for row in reader:
-        name = row["Name"].strip()
+        name = row["Name"].strip().lower()
         employee_availability[name] = {}
 
         for csv_col, day in DAY_COLUMNS.items():

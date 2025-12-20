@@ -3,14 +3,56 @@
 ## Instructions
 
 The first step is to download the data required from the google sheets. Download it as a csv file. 
+Put it in the same folder as main.py and name it responses.csv
 
-```bash
-pip install foobar
+1) #### Open Hours
+
+Now, edit the open hours. Go to main.py and find the lines with openhours. The times entered must be in 24hr format. 
+
+```
+openhours = {
+    #Day: start, open, employees needed
+    "Sunday": [
+        (time(12), time(14), 1)
+        (time(14), time(16), 1)
+        (time(16), time(18), 1)
+        (time(18), time(20), 1)
+        (time(20), time(22), 1)
+    ],
+}
 ```
 
-## Notes
+Edit each day so that it reflects the times you want to be open. The scheduling system is dynamic and works accordingly. A totally closed day can be left as:
+
+```
+    "Saturday": [
+
+    ],
+
+```
 
 All times are assumed to be in pm format
+
+2) #### Pair constraints
+
+The system handles requests to encourage specifc pairs who want to work together and discourage pairs who don't want to work together. These need to be added manually. 
+
+Find lines in main.py with the following code
+
+```
+# Discourage algorithm to return results with the following pairs working together
+conflicts = {
+    ("Marina", "Lars"): 5   # higher value = more discouraged
+}
+
+# Encourage algorithm to return resuts with the following pairs working together
+preferred_pairs = {
+    ("Kate", "Trey"): 5,  # higher value = more encouraged
+    ("Krish", "Julia"): 5
+}
+```
+
+Change names accordingly. The names must match the name submitted via google sheets. 
 
 ## Features
 
