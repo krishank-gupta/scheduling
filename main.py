@@ -7,76 +7,76 @@ from datetime import time
 openhours = {
     #Day: start, open, employees needed
     "Sunday": [
-        (time(12), time(14), 1)
-        (time(14), time(16), 1)
-        (time(16), time(18), 1)
-        (time(18), time(20), 1)
-        (time(20), time(22), 1)
+        (time(14), time(16), 2),
+        (time(16), time(18), 2),
+        (time(18), time(20), 2),
     ],
     "Monday": [
-        (time(12), time(14), 1)
-        (time(14), time(16), 1)
-        (time(16), time(18), 1)
-        (time(18), time(20), 1)
-        (time(20), time(22), 1)
+        (time(16), time(18), 2),
+        (time(18), time(20), 3),
+        (time(20), time(22), 2)
     ],
     "Tuesday": [
-        (time(12), time(14), 1)
-        (time(14), time(16), 1)
-        (time(16), time(18), 1)
-        (time(18), time(20), 1)
-        (time(20), time(22), 1)
+        (time(16), time(18), 2),
+        (time(18), time(20), 3),
+        (time(20), time(22), 2)
     ],
     "Wednesday": [
-        (time(12), time(14), 1)
-        (time(14), time(16), 1)
-        (time(16), time(18), 1)
-        (time(18), time(20), 1)
-        (time(20), time(22), 1)
-    ],
+        (time(16), time(18), 2),
+        (time(18), time(20), 3),
+        (time(20), time(22), 2)
+    ],  
     "Thursday": [
-        (time(12), time(14), 1)
-        (time(14), time(16), 1)
-        (time(16), time(18), 1)
-        (time(18), time(20), 1)
-        (time(20), time(22), 1)
+        (time(14), time(16), 2),
+        (time(16), time(18), 2),
+        (time(18), time(20), 2)
     ],
     "Friday": [
-        (time(12), time(14), 1)
-        (time(14), time(16), 1)
-        (time(16), time(18), 1)
-        (time(18), time(20), 1)
-        (time(20), time(22), 1)
+        (time(12), time(14), 2),
+        (time(14), time(16), 2),
+        (time(16), time(18), 2),
     ],
     "Saturday": [
-        (time(12), time(14), 1)
-        (time(14), time(16), 1)
-        (time(16), time(18), 1)
-        (time(18), time(20), 1)
-        (time(20), time(22), 1)
     ]
 }
 
 # Discourage algorithm to return results with the following pairs working together
-conflicts = {
-    ("Marina", "Lars"): 5   # higher value = more discouraged
+CONFLICTS = {
+    ("Marina", "Lars"): 5,  # higher value = more discouraged
+    ("Marina", "Simone"): 5,
+    ("Bryn", "River"): 5
 }
 
 # Encourage algorithm to return resuts with the following pairs working together
-preferred_pairs = {
+
+# For gender queer and beginner hours, put people comfortable working together below 
+# So that they are likely to be scheduler together and those hours can be 
+PREFERRED_PAIRS = {
     ("Kate", "Trey"): 5,  # higher value = more encouraged
     ("Krish", "Julia"): 5
 }
 
+# Convert form response to actual week day
+# If form question for availability changes, change this variable
+DAY_COLUMNS = {
+    "Availability: [Sunday]": "Sunday",
+    "Availability: [Monday]": "Monday",
+    "Availability: [Tuesday]": "Tuesday",
+    "Availability: [Wednesday]": "Wednesday",
+    "Availability: [Thursday]": "Thursday",
+    "Availability: [Friday]": "Friday",
+    "Availability: [Saturday]": "Saturday",
+}
+
 ######################################################################################################
 ##################################### DO NOT EDIT BELOW THIS LINE ####################################
 ##################################### DO NOT EDIT BELOW THIS LINE ####################################
 ##################################### DO NOT EDIT BELOW THIS LINE ####################################
 ######################################################################################################
 
-# Ensure lower case for conflicts and preferred_pairs
-conflicts = {tuple(map(str.lower, pair)): w for pair, w in conflicts.items()}
-preferred_pairs = {tuple(map(str.lower, pair)): w for pair, w in preferred_pairs.items()}
+# Ensure lower case for CONFLICTS and PREFERRED_PAIRS
+CONFLICTS = {tuple(map(str.lower, pair)): w for pair, w in CONFLICTS.items()}
+PREFERRED_PAIRS = {tuple(map(str.lower, pair)): w for pair, w in PREFERRED_PAIRS.items()}
 
 # Employee availability in pulled from csv file
 
@@ -101,18 +101,6 @@ employee_availability = {}
 #         "Monday": [(time(12), time(2))]
 #     }
 # }
-
-# Convert form response to actual week day
-# If form question for availability changes, change this variable
-DAY_COLUMNS = {
-    "Availability: [Sunday]": "Sunday",
-    "Availability: [Monday]": "Monday",
-    "Availability: [Tuesday]": "Tuesday",
-    "Availability: [Wednesday]": "Wednesday",
-    "Availability: [Thursday]": "Thursday",
-    "Availability: [Friday]": "Friday",
-    "Availability: [Saturday]": "Saturday",
-}
 
 
 def parse_time_range(time_range: str):
@@ -224,10 +212,10 @@ for employee in employee_availability:
             lp += v1 + v2 <= 1, f"no_consecutive_{employee}_{d1}"
 
 
-# 4) Penalize staff who shouldn't be places together
+# 4) Penalize staff who shouldn't be placed together
 penalties = []
 
-for (e1, e2), weight in conflicts.items():
+for (e1, e2), weight in CONFLICTS.items():
     for (employee, day, start, end) in variable:
         if employee == e1 and (e2, day, start, end) in variable:
             p = LpVariable(
@@ -247,7 +235,7 @@ for (e1, e2), weight in conflicts.items():
 # 5) Encourage algorithms to pair these pairs
 bonuses = []
 
-for (e1, e2), weight in preferred_pairs.items():
+for (e1, e2), weight in PREFERRED_PAIRS.items():
     for (employee, day, start, end) in variable:
         if employee == e1 and (e2, day, start, end) in variable:
             b = LpVariable(
@@ -307,7 +295,3 @@ def total_hours():
 
 for instance in final_schedule_set:
     print("final: ", instance)
-
-print("when is person x working ", when_are_they_working("Jack"))
-print("who is working on monday 12 - 15 ",who_is_working("Monday_1200_1500"))
-print("total hours: ", total_hours())
