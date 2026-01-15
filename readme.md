@@ -42,13 +42,13 @@ Find lines in main.py with the following code
 ```
 # Discourage algorithm to return results with the following pairs working together
 conflicts = {
-    ("Marina", "Lars"): 5   # higher value = more discouraged
+    ("Jack", "John"): 5   # higher value = more discouraged
 }
 
 # Encourage algorithm to return resuts with the following pairs working together
 preferred_pairs = {
-    ("Kate", "Trey"): 5,  # higher value = more encouraged
-    ("Krish", "Julia"): 5
+    ("Jane", "Jone"): 5,  # higher value = more encouraged
+    ("Mia", "Moa"): 5
 }
 ```
 
