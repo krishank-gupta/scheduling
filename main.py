@@ -53,7 +53,12 @@ CONFLICTS = {
 # So that they are likely to be scheduler together and those hours can be 
 PREFERRED_PAIRS = {
     ("Kate", "Trey"): 5,  # higher value = more encouraged
-    ("Krish", "Julia"): 5
+    ("Krish", "Julia"): 5,
+    ("Julia", "Bryn"): 5,
+    ("Marina", "Stella"): 5,
+    ("Marina", "Bryn"): 5,
+    ("Marina", "Trey"): 5,
+    ("Trey", "Bryn"): 5
 }
 
 # Convert form response to actual week day
@@ -209,8 +214,12 @@ for employee in employee_availability:
 
     for (d1, s1, e1, v1), (d2, s2, e2, v2) in combinations(shifts, 2):
         if d1 == d2 and (e1 == s2 or e2 == s1):
-            lp += v1 + v2 <= 1, f"no_consecutive_{employee}_{d1}"
-
+            lp += (
+                v1 + v2 <= 1,
+                f"no_consecutive_{employee}_{d1}_"
+                f"{s1.strftime('%H%M')}_{e1.strftime('%H%M')}_"
+                f"{s2.strftime('%H%M')}_{e2.strftime('%H%M')}"
+            )
 
 # 4) Penalize staff who shouldn't be placed together
 penalties = []
@@ -295,3 +304,37 @@ def total_hours():
 
 for instance in final_schedule_set:
     print("final: ", instance)
+
+
+staff = """Stella
+Marina
+Gavin
+Fritz
+Berit
+Julia
+Bryn
+Will
+Maggie
+Krish
+Luke
+Maddie
+Lars
+Leah
+Pierce
+Simone
+Siadhal
+Kate
+River
+Trey
+Arianna"""
+
+for member in staff.strip().split("\n"):
+    emp = member.strip().lower()
+    shifts = when_are_they_working(emp)
+    print(f"{member} is working {len(shifts)} shifts: {shifts}")
+
+for time_slot in openhours:
+    for start, end, _ in openhours[time_slot]:
+        shift_str = f"{time_slot}_{start.strftime('%H%M')}_{end.strftime('%H%M')}"
+        employees = who_is_working(shift_str)
+        print(f"On {time_slot} from {start.strftime('%H:%M')} to {end.strftime('%H:%M')}, working: {employees}")
